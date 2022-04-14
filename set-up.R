@@ -6,3 +6,4 @@
 #############################################
 
 library(data.table)
+library(naniar)
