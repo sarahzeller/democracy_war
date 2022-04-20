@@ -91,3 +91,13 @@ dataDT[, `:=`(mzjoany = NULL,
               mzongo = NULL)]
 
 #lead mzmid
+#check first that there are no years missing
+dataDT[, miss := year != shift(year) + 1, by = .(ccode1, ccode2)]
+sum(dataDT$miss, na.rm = T)
+dataDT[, miss := NULL]
+##yup, definitely some missing
+data_completeDT <- dataDT[CJ(dcode = dcode,
+                          year = year,
+                          unique = T),
+                       on=.(dcode, year)]
+data_completeDT[, mzmid1 := shift(mzmid), by = dcode]
