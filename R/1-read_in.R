@@ -96,8 +96,45 @@ dataDT[, miss := year != shift(year) + 1, by = .(ccode1, ccode2)]
 sum(dataDT$miss, na.rm = T)
 dataDT[, miss := NULL]
 ##yup, definitely some missing
+# so add all year-dcode combinations
 data_completeDT <- dataDT[CJ(dcode = dcode,
                           year = year,
                           unique = T),
                        on=.(dcode, year)]
-data_completeDT[, mzmid1 := shift(mzmid), by = dcode]
+#take out all years & combinations which are never used
+#TODO make this a bit shorter & prettier
+#create a dummy for implied missing observations
+data_completeDT[, not_missing := year * !is.na(ccode1)][
+  #find the first and last year of observation for dyad
+                  , `:=`(first_year = ifelse(length(unique(not_missing)) == 1, 
+                                             0, 
+                                             min(not_missing[not_missing > 0])),
+                       last_year = max(not_missing)),
+                by = dcode]
+#keep only those which are within the interval
+dataDT <- data_completeDT[year >= first_year &
+                                  year <= last_year][
+                                  ,  `:=`(first_year = NULL,
+                                         last_year = NULL,
+                                         not_missing = NULL)]
+dataDT[, mzmid1 := shift(mzmid), by = dcode]
+saveRDS(data_completeDT, "output/data_completeDT.rds")
+rm(data_completeDT)
+
+#################################
+###regime type dummies
+#################################
+#check that correlation is really high
+cor(dataDT$polity1, 
+    dataDT$dem1, 
+    use = "complete.obs")
+cor(dataDT$polity2, 
+    dataDT$dem2, 
+    use = "complete.obs")
+
+#drop Polity-III scores, replace them with Polity-IV scores
+dataDT[, `:=`(dem1 = polity1,
+               dem2 = polity2,
+               polity1 = NULL,
+               polity2 = NULL
+                       )]
