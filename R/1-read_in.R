@@ -138,3 +138,22 @@ dataDT[, `:=`(dem1 = polity1,
                polity1 = NULL,
                polity2 = NULL
                        )]
+
+# dummy variables for each net-democracy level
+#baseline dummies
+dataDT[, `:=`(d7c1n1 = dem1 < -3,
+              d7c1n2 = -3 >= dem1 & dem1 <= 3,
+              d7c1n3 = dem1 > 3,
+              d7c2n1 = dem2 < -3,
+              d7c2n2 = -3 >= dem2 & dem1 <= 3,
+              d7c2n3 = dem2 > 3,
+              #Mansfield and Snyder (2002) dummies
+              dbisc1n1 = dem1 < -6,
+              dbisc1n2 = dem1 >= -6 & dem1 <= 6,
+              dbisc1n3 = dem1 > 6,
+              dbisc2n1 = dem1 < -6,
+              dbisc2n2 = dem1 >= -6 & dem1 <= 6,
+              dbisc2n3 = dem1 > 6 )]
+
+## Mzmid does not exist after 2000, so delete all observations after
+dataDT <- dataDT[year <= 2000]
