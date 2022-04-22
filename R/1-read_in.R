@@ -178,5 +178,21 @@ set(dataDT, ,
     c("dbisanoctransc1", "dbisanoctransc2"), 
     value = NULL)
 
+# create dummies for all regime-type dyads
+for(c1 in 1:3) {
+  for (c2 in 1:3) {
+    dataDT[, paste0("d7n", c1, c2) := 
+             get(paste0("d7c1n", c1)) + get(paste0("d7c2n", c2))]
+    dataDT[get(paste0("d7n", c1, c2)) == 1, 
+           paste0("d7n", c1, c2) := 0]
+    dataDT[get(paste0("d7n", c1, c2)) == 2, 
+           paste0("d7n", c1, c2) := 1]
+  }
+}
+
+# Symmetric definitions for mixed-type dyads in nondirected data
+dataDT[, d7n21s := d7n21 + d7n12]
+
+
 ## Mzmid does not exist after 2000, so delete all observations after
 dataDT <- dataDT[year <= 2000]
