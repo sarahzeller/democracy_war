@@ -153,9 +153,9 @@ dataDT[, `:=`(
   dbisc1n1 = dem1 < -6,
   dbisc1n2 = dem1 >= -6 & dem1 <= 6,
   dbisc1n3 = dem1 > 6,
-  dbisc2n1 = dem1 < -6,
-  dbisc2n2 = dem1 >= -6 & dem1 <= 6,
-  dbisc2n3 = dem1 > 6
+  dbisc2n1 = dem2 < -6,
+  dbisc2n2 = dem2 >= -6 & dem2 <= 6,
+  dbisc2n3 = dem2 > 6
 )]
 
 # Mansfield and Snyder (2002) transition dummy: 
