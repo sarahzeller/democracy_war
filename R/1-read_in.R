@@ -144,10 +144,10 @@ dataDT[, `:=`(
 #baseline dummies
 dataDT[, `:=`(
   d7c1n1 = dem1 < -3,
-  d7c1n2 = -3 >= dem1 & dem1 <= 3,
+  d7c1n2 = dem1 >= -3 & dem1 <= 3,
   d7c1n3 = dem1 > 3,
   d7c2n1 = dem2 < -3,
-  d7c2n2 = -3 >= dem2 & dem1 <= 3,
+  d7c2n2 = dem2 >= -3 & dem2 <= 3,
   d7c2n3 = dem2 > 3,
   #Mansfield and Snyder (2002) dummies
   dbisc1n1 = dem1 < -6,
@@ -183,16 +183,40 @@ for(c1 in 1:3) {
   for (c2 in 1:3) {
     dataDT[, paste0("d7n", c1, c2) := 
              get(paste0("d7c1n", c1)) + get(paste0("d7c2n", c2))]
-    dataDT[get(paste0("d7n", c1, c2)) == 1, 
+    # #if only one country matches: it's not really in that dyad
+    dataDT[get(paste0("d7n", c1, c2)) == 1,
            paste0("d7n", c1, c2) := 0]
-    dataDT[get(paste0("d7n", c1, c2)) == 2, 
+    dataDT[get(paste0("d7n", c1, c2)) == 2,
            paste0("d7n", c1, c2) := 1]
+    # and for Mansfield and Snyder (2002)
+    dataDT[, paste0("dbisn", c1, c2) := 
+             get(paste0("dbisc1n", c1)) + get(paste0("dbisc2n", c2))]
+    # #if only one country matches: it's not really in that dyad
+    dataDT[get(paste0("dbisn", c1, c2)) == 1,
+           paste0("dbisn", c1, c2) := 0]
+    dataDT[get(paste0("dbisn", c1, c2)) == 2,
+           paste0("dbisn", c1, c2) := 1]
   }
 }
 
 # Symmetric definitions for mixed-type dyads in nondirected data
-dataDT[, d7n21s := d7n21 + d7n12]
+dataDT[, `:=`(
+  d7n21s = d7n21 + d7n12,
+  d7n32s = d7n32 + d7n23,
+  d7n31s = d7n31 + d7n13,
+  d7n11s = d7n11,
+  d7n22s = d7n22,
+  d7n33s = d7n33,
+  #Mansfield and Snyder (2002) dummies
+  dbisn21s = dbisn21 + dbisn12,
+  dbisn32s = dbisn32 + dbisn23,
+  dbisn31s = dbisn31 + dbisn13,
+  dbisn11s = dbisn11,
+  dbisn22s = dbisn22,
+  dbisn33s = dbisn33
+)]
 
+dataDT[]
 
 ## Mzmid does not exist after 2000, so delete all observations after
 dataDT <- dataDT[year <= 2000]
