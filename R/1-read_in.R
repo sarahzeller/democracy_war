@@ -158,5 +158,25 @@ dataDT[, `:=`(
   dbisc2n3 = dem1 > 6
 )]
 
+# Mansfield and Snyder (2002) transition dummy: 
+# transition from n1 to n2
+dataDT[, c(paste0("dbisanoctransc", 1:2), paste0("d7anoctransc", 1:2)) := .(
+  dbisc1n2 == 1 & shift(dbisc1n1, n = 5) == 1,
+  dbisc2n2 == 1 & shift(dbisc2n1, n = 5) == 1,
+  d7c1n2 == 1 & shift(d7c1n1, n = 5) == 1,
+  d7c2n2 == 1 & shift(d7c2n1, n = 5) == 1
+)]
+
+#at least one country in the dyad has a transition
+dataDT[, c("dbisanoctransij", "d7anoctransij") := .(
+  dbisanoctransc1 == 1 | dbisanoctransc2 == 1,
+  d7anoctransc1 == 1 | d7anoctransc2 == 1
+)]
+
+#drop the unneeded dummies
+set(dataDT, ,
+    c("dbisanoctransc1", "dbisanoctransc2"), 
+    value = NULL)
+
 ## Mzmid does not exist after 2000, so delete all observations after
 dataDT <- dataDT[year <= 2000]
