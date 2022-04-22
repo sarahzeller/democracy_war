@@ -216,7 +216,20 @@ dataDT[, `:=`(
   dbisn33s = dbisn33
 )]
 
-dataDT[]
+#drop unused variables
+set(x = dataDT, 
+    j = names(dataDT)[names(dataDT) %like% "d7n..$" |
+                        names(dataDT) %like% "dbisn..$" |
+                        names(dataDT) %like% "d7c.n.$" |
+                        names(dataDT) %like% "d7anoctransc." |
+                        names(dataDT) %like% "dbisc.n.$"],
+    value = NULL)
+
+#order
+setcolorder(dataDT, 
+            c("dcode", "year"))
 
 ## Mzmid does not exist after 2000, so delete all observations after
 dataDT <- dataDT[year <= 2000]
+
+saveRDS(dataDT, "output/dataDT.rds")
