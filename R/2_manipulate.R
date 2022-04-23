@@ -98,24 +98,23 @@ sum(dataDT$miss, na.rm = T)
 dataDT[, miss := NULL]
 ##yup, definitely some missing
 # so add all year-dcode combinations
+# check min and max year of observation
+min_max <- dataDT[, .(min_year = min(year),
+                      max_year = max(year)),
+                  by = dcode,]
+
 data_completeDT <- dataDT[CJ(dcode = dcode,
                              year = year,
                              unique = T),
-                          on = .(dcode, year)]
+                          on = .(dcode, year)][
+                            min_max, on = "dcode"
+                          ]
+rm(min_max)
 #take out all years & combinations which are never used
-#TODO make this a bit shorter & prettier
-#create a dummy for implied missing observations
-data_completeDT[, not_missing := year * !is.na(ccode1)][#find the first and last year of observation for dyad
-  , `:=`(first_year = ifelse(length(unique(not_missing)) == 1,
-                             0,
-                             min(not_missing[not_missing > 0])),
-         last_year = max(not_missing)),
-  by = dcode]
 #keep only those which are within the interval
-dataDT <- data_completeDT[year >= first_year &
-                            year <= last_year][,  `:=`(first_year = NULL,
-                                                       last_year = NULL,
-                                                       not_missing = NULL)]
+dataDT <- data_completeDT[year >= min_year &
+                            year <= max_year][,  `:=`(min_year = NULL,
+                                                       max_year = NULL)]
 dataDT[, mzmid1 := shift(mzmid), by = dcode]
 # saveRDS(data_completeDT, "output/data_completeDT.rds")
 rm(data_completeDT)
