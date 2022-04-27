@@ -79,8 +79,8 @@ dataDT[, contig := NULL]
 
 #simplify major powers
 dataDT[, majpow := majpow1 == 1 | majpow2 == 1]
-dataDT[, `:=` (majpow1 = NULL,
-               majpow2 = NULL)]
+dataDT[, `:=`(majpow1 = NULL,
+              majpow2 = NULL)]
 
 #simplify alliance
 dataDT[, allianced := alliance != 4]
@@ -101,7 +101,7 @@ dataDT[, miss := NULL]
 # check min and max year of observation
 min_max <- dataDT[, .(min_year = min(year),
                       max_year = max(year)),
-                  by = dcode,]
+                  by = dcode, ]
 
 data_completeDT <- dataDT[CJ(dcode = dcode,
                              year = year,
@@ -116,7 +116,7 @@ dataDT <- data_completeDT[year >= min_year &
                             year <= max_year][,  `:=`(min_year = NULL,
                                                        max_year = NULL)]
 dataDT[, mzmid1 := shift(mzmid), by = dcode]
-# saveRDS(data_completeDT, "output/data_completeDT.rds")
+saveRDS(data_completeDT, "output/data_completeDT.rds")
 rm(data_completeDT)
 
 #################################
@@ -156,7 +156,7 @@ dataDT[, `:=`(
   dbisc2n3 = dem2 > 6
 )]
 
-# Mansfield and Snyder (2002) transition dummy: 
+# Mansfield and Snyder (2002) transition dummy:
 # transition from n1 to n2
 dataDT[, c(paste0("dbisanoctransc", 1:2), paste0("d7anoctransc", 1:2)) := .(
   dbisc1n2 == 1 & shift(dbisc1n1, n = 5) == 1,
@@ -173,13 +173,13 @@ dataDT[, c("dbisanoctransij", "d7anoctransij") := .(
 
 #drop the unneeded dummies
 set(dataDT, ,
-    c("dbisanoctransc1", "dbisanoctransc2"), 
+    c("dbisanoctransc1", "dbisanoctransc2"),
     value = NULL)
 
 # create dummies for all regime-type dyads
-for(c1 in 1:3) {
+for (c1 in 1:3) {
   for (c2 in 1:3) {
-    dataDT[, paste0("d7n", c1, c2) := 
+    dataDT[, paste0("d7n", c1, c2) :=
              get(paste0("d7c1n", c1)) + get(paste0("d7c2n", c2))]
     # #if only one country matches: it's not really in that dyad
     dataDT[get(paste0("d7n", c1, c2)) == 1,
@@ -187,7 +187,7 @@ for(c1 in 1:3) {
     dataDT[get(paste0("d7n", c1, c2)) == 2,
            paste0("d7n", c1, c2) := 1]
     # and for Mansfield and Snyder (2002)
-    dataDT[, paste0("dbisn", c1, c2) := 
+    dataDT[, paste0("dbisn", c1, c2) :=
              get(paste0("dbisc1n", c1)) + get(paste0("dbisc2n", c2))]
     # #if only one country matches: it's not really in that dyad
     dataDT[get(paste0("dbisn", c1, c2)) == 1,
@@ -215,7 +215,7 @@ dataDT[, `:=`(
 )]
 
 #drop unused variables
-set(x = dataDT, 
+set(x = dataDT,
     j = names(dataDT)[names(dataDT) %like% "d7n..$" |
                         names(dataDT) %like% "dbisn..$" |
                         names(dataDT) %like% "d7c.n.$" |
@@ -224,7 +224,7 @@ set(x = dataDT,
     value = NULL)
 
 #order
-setcolorder(dataDT, 
+setcolorder(dataDT,
             c("dcode", "year"))
 
 ## Mzmid does not exist after 2000, so delete all observations after

@@ -11,4 +11,3 @@ sourceDT <- fread("input/data/bls.data.raw")
 names(sourceDT)
 str(sourceDT)
 saveRDS(sourceDT, "output/sourceDT.rds")
-
