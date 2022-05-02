@@ -230,4 +230,25 @@ setcolorder(dataDT,
 ## Mzmid does not exist after 2000, so delete all observations after
 dataDT <- dataDT[year <= 2000]
 
+# add a variable for duration since last war
+# assume NAs are 0 for war spells: otherwise this function won't work
+dataDT[is.na(mzmid), mzmid := 0]
+dataDT[is.na(mzmid1), mzmid1 := 0]
+
+# library(DAMisc)
+# newdata <- btscs(
+#   data = dataDT,
+#   event = "mzmid",
+#   tvar = "year",
+#   csunit = "dcode"
+# )
+
+dataDT[, event_no := mzmid - mzmid1, by = dcode][
+  , event_no := cumsum(event_no), by = dcode
+]
+dataDT[, event_no := cumsum(event_no), by = dcode]
+dataDT[, py := 0:(.N-1), by = .(dcode, event_no)]
+dataDT[event_no == 0, py := 0]
+data[event_no := NULL]
+
 saveRDS(dataDT, "output/dataDT.rds")
