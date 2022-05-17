@@ -44,13 +44,15 @@
 * Marshall, Monty G. and Keith Jaggers. 2002. Polity IV Project: Political Regime Characteristics and Transitions, 1800-2002. http://www.cidcm.umd.edu/inscr/polity/index.htm.
 
 #delimit ;
-cd "~/bls/empirical/";
+cd "C:\Users\sarah\Documents\R_projects\democracy_war\stata";
 set more off;
 clear all;
-set memory 171817k;
+* set memory 171817k;
 
-infile int ccode1 int ccode2 int year float cap_1 float cap_2 byte majpow1 byte majpow2 byte alliance byte dem1 byte dem2 byte contig float distance int numstate int numGPs float syscon int mzongo int mzongonm int mzmid int mzmidnm int mzhost1 int mzhost2 byte mzhostd int mzkeynum byte mzjoany byte mzjomid byte mzhiactd int mzfatald byte mzcowwar float dtrade float ttrade1 float ttrade2 float dependa float dependb long democ1 long democ2 long autoc1 long autoc2 long polity1 long polity2 long xrreg1 long xrreg2 long xrcomp1 long xrcomp2 long xropen1 long xropen2 long xconst1 long xconst2 long parreg1 long parreg2 long parcomp1 long parcomp2 long exrec1 long exrec2 long exconst1 long exconst2 long polcomp1 long polcomp2  using bls.data.raw;
+import delimited using bls.data.raw, varnames(1);
+*infile int ccode1 int ccode2 int year float cap_1 float cap_2 byte majpow1 byte majpow2 byte alliance byte dem1 byte dem2 byte contig float distance int numstate int numGPs float syscon int mzongo int mzongonm int mzmid int mzmidnm int mzhost1 int mzhost2 byte mzhostd int mzkeynum byte mzjoany byte mzjomid byte mzhiactd int mzfatald byte mzcowwar float dtrade float ttrade1 float ttrade2 float dependa float dependb long democ1 long democ2 long autoc1 long autoc2 long polity1 long polity2 long xrreg1 long xrreg2 long xrcomp1 long xrcomp2 long xropen1 long xropen2 long xconst1 long xconst2 long parreg1 long parreg2 long parcomp1 long parcomp2 long exrec1 long exrec2 long exconst1 long exconst2 long polcomp1 long polcomp2 using bls.data.raw;
 
+rename numgps numGPs;
 * The next command drops the case that was read 
 *  if the user included a line of variable names;
 
@@ -69,6 +71,3 @@ mvdecode democ1 democ2 autoc1 autoc2 xrreg1 xrreg2 xrcomp1 xrcomp2 xropen1 xrope
 compress;
 
 save bls.data.raw.dta, replace;
-
-
-

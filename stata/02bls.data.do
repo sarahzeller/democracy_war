@@ -1,9 +1,10 @@
 clear all
 set more off
 set mem 500m
-cd "C:\bls\empirical.2"
+*cd "C:\bls\empirical.2"
+cd "C:\Users\sarah\Documents\R_projects\democracy_war\stata"
 capture log close
-log using "./log.files/bls.data.log", replace
+*log using "./log.files/bls.data.log", replace
 
 use bls.data.raw.dta
 
@@ -16,6 +17,7 @@ drop autoc? democ? xrreg* xrcomp* xropen* parreg* parcomp* exrec* exconst* polco
 
 *Defines dcode, the unique dyad identifier
 gen dcode=ccode1*1000+ccode2
+*this checks if there are unique identifiers for each year (?) and dcode
 isid ye dcode
 
 *****************************************
@@ -60,8 +62,11 @@ isn't one.
 replace mzmid=. if mzongo==1 | mzjoany==1
 drop mzongo mzjoany
 *The dependent variables if mzmid at t+1
+*tssettime dcode ye, ye
+* NEW CODE LINE FOR NEW STATA VERSION
 tsset dcode ye, ye
 gen mzmid1=f.mzmid
+*this first sets the identifier and year for time series stuff, then generates a lead 
 
 
 
