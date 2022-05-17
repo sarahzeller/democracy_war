@@ -225,20 +225,42 @@ dataDT <- dataDT[year <= 2000]
 dataDT[is.na(mzmid), mzmid := 0]
 dataDT[is.na(mzmid1), mzmid1 := 0]
 
-# library(DAMisc)
-# newdata <- btscs(
-#   data = dataDT,
-#   event = "mzmid",
-#   tvar = "year",
-#   csunit = "dcode"
-# )
-
 dataDT[, event_no := mzmid - mzmid1, by = dcode][
   , event_no := cumsum(event_no), by = dcode
 ]
 dataDT[, event_no := cumsum(event_no), by = dcode]
 dataDT[, py := 0:(.N-1), by = .(dcode, event_no)]
 dataDT[event_no == 0, py := 0]
-data[event_no := NULL]
+dataDT[, event_no := NULL]
+
+# also need to add NATURAL CUBIC SPLINES:
+# 3 terms with 3 equally-spaced-out knots
+# library(splines)
 
 saveRDS(dataDT, "output/dataDT.rds")
+
+# compare with statafull dataset, which already includes splines
+statafullDT <- as.data.table(readRDS("output/statafull.rds"))
+statafullDT[, year := as.integer(format(year, format = "%Y"))]
+nrow(statafullDT) == nrow(dataDT) # not identical row numbers
+sum(names(dataDT) %in% names(statafullDT) == F) #all cols included but splines
+
+sum(unique(dataDT$dcode) %in% unique(statafullDT$dcode) == F) # all the same dcodes
+sum(unique(statafullDT$dcode) %in% unique(dataDT$dcode) == F)
+
+# check out min and max years per dcode: they're exactly the same
+yearsDT <- dataDT[, .(min_year_R = min(year),
+                      max_year_R = max(year)),
+                  by = dcode]
+yearsDT <- merge(yearsDT,
+                 statafullDT[, .(min_year_S = min(year),
+                                 max_year_S = max(year)),
+                             by = dcode],
+                 by = "dcode")
+yearsDT[, .(diff_min = sum(min_year_S != min_year_R),
+            diff_max = sum(max_year_S != max_year_R))]
+
+rm(yearsDT)
+
+# TODO: complete the stata data set, i.e. also enter dyad-year combinations where
+# all values are missing. Then check if nrow is the same. in that case: merge.
