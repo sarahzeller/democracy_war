@@ -1,11 +1,3 @@
-############################################
-#Project: Topics in International Economics
-#Author: Sarah
-#Data: Baliga, S, D.O. Lucaa and T. Sjöström (2011)
-#Aim:   Manipulate data like in paper
-#last edit: 22/04/14
-#############################################
-
 #read in data
 source("set-up.R")
 dataDT <- readRDS("output/sourceDT.rds")
@@ -27,7 +19,6 @@ dataDT <- dataDT[, .SD, .SDcols = c(
   "distance",
   "mzongo",
   "mzmid",
-  "mzmidnm",
   "mzjoany",
   "polity1",
   "polity2"
@@ -53,7 +44,6 @@ columns <- c(
   "distance",
   "mzongo",
   "mzmid",
-  "mzmidnm",
   "mzjoany"
 )
 dataDT[, (columns) := lapply(.SD,
