@@ -97,18 +97,23 @@ min_max <- dataDT[, .(min_year = min(year),
 data_completeDT <- dataDT[CJ(dcode = dcode,
                              year = year,
                              unique = T),
-                          on = .(dcode, year)][
-                            min_max, on = "dcode"
-                          ]
+                          on = .(dcode, year)
+                          ][min_max, on = "dcode"
+                          ][is.na(ccode1) == TRUE, 
+                            missing_year := 1]
+
 rm(min_max)
 #take out all years & combinations which are never used
 #keep only those which are within the interval
-dataDT <- data_completeDT[year >= min_year &
-                            year <= max_year
-                          ][,  `:=`(min_year = NULL,
-                                    max_year = NULL)
-                          ][, mzmid1 := shift(mzmid), by = dcode]
+dataDT <- data_completeDT[year >= min_year & year <= max_year
+                          ][, mzmid1 := shift(mzmid, type = "lead"), 
 saveRDS(data_completeDT, "output/data_completeDT.rds")
+                            by = dcode
+                          ][missing_year == 1,
+                            mzmid1 := NA
+                          ][, `:=`(min_year = NULL,
+                                   max_year = NULL,
+                                   missing_year = NULL)]
 rm(data_completeDT)
 
 #################################
