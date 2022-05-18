@@ -93,7 +93,6 @@ data_completeDT <- dataDT[CJ(dcode = dcode,
                           ][is.na(ccode1) == TRUE, 
                             missing_year := 1]
 
-rm(min_max)
 #take out all years & combinations which are never used
 #keep only those which are within the interval
 dataDT <- data_completeDT[year >= min_year & year <= max_year
@@ -168,31 +167,27 @@ dataDT[, trans_na := is.na(dbisc1n2) | is.na(shift(dbisc1n1, n = 5)) |
 #at least one country in the dyad has a transition
 dataDT[, c("dbisanoctransij", "d7anoctransij") := .(
   dbisanoctransc1 == 1 | dbisanoctransc2 == 1,
-  d7anoctransc1 == 1 | d7anoctransc2 == 1
-)]
-
-#drop the unneeded dummies
-set(dataDT, ,
-    c("dbisanoctransc1", "dbisanoctransc2"),
-    value = NULL)
+  d7anoctransc1 == 1 | d7anoctransc2 == 1)
+  ][, `:=`("dbisanoctransc1" = NULL,
+           "dbisanoctransc2" = NULL)]
 
 # create dummies for all regime-type dyads
 for (c1 in 1:3) {
   for (c2 in 1:3) {
     dataDT[, paste0("d7n", c1, c2) :=
-             get(paste0("d7c1n", c1)) + get(paste0("d7c2n", c2))]
+             get(paste0("d7c1n", c1)) + get(paste0("d7c2n", c2))
     # #if only one country matches: it's not really in that dyad
-    dataDT[get(paste0("d7n", c1, c2)) == 1,
-           paste0("d7n", c1, c2) := 0]
-    dataDT[get(paste0("d7n", c1, c2)) == 2,
-           paste0("d7n", c1, c2) := 1]
+          ][get(paste0("d7n", c1, c2)) == 1,
+           paste0("d7n", c1, c2) := 0
+          ][get(paste0("d7n", c1, c2)) == 2,
+           paste0("d7n", c1, c2) := 1
     # and for Mansfield and Snyder (2002)
-    dataDT[, paste0("dbisn", c1, c2) :=
-             get(paste0("dbisc1n", c1)) + get(paste0("dbisc2n", c2))]
+          ][, paste0("dbisn", c1, c2) :=
+             get(paste0("dbisc1n", c1)) + get(paste0("dbisc2n", c2))
     # #if only one country matches: it's not really in that dyad
-    dataDT[get(paste0("dbisn", c1, c2)) == 1,
-           paste0("dbisn", c1, c2) := 0]
-    dataDT[get(paste0("dbisn", c1, c2)) == 2,
+          ][get(paste0("dbisn", c1, c2)) == 1,
+           paste0("dbisn", c1, c2) := 0
+          ][get(paste0("dbisn", c1, c2)) == 2,
            paste0("dbisn", c1, c2) := 1]
   }
 }
@@ -232,100 +227,61 @@ dataDT <- dataDT[year <= 2000]
 
 # add a variable for duration since last war
 # assume NAs are 0 for war spells: otherwise this function won't work
-dataDT[, event_no := fifelse(is.na(mzmid) == TRUE, 0, mzmid) - 
-         ifelse(is.na(mzmid1) == TRUE, 0, mzmid1), 
+dataDT[, event_no := fifelse(is.na(mzmid) == TRUE, 0, mzmid),
        by = dcode
-       ][, event_no := cumsum(ifelse(event_no < 0, 0, event_no)), by = dcode
+       ][, event_no := cumsum(event_no),
+         by = dcode
        ][, py := 0:(.N-1), by = .(dcode, event_no)
-       ][, event_no := NULL]
-# this is coded differently in stata, so I take that
-# dataDT[event_no == 0, py := 0]
+         # show missing values
+       ][is.na(mzmid1) , 
+         war_missing := 1
+       ][war_missing == TRUE,
+         py := NA
+       ][, `:=`(event_no = NULL,
+                war_missing = NULL)]
 
 # also need to add NATURAL CUBIC SPLINES:
-# 3 terms with 3 equally-spaced-out knots
-# library(splines)
-if ("dataDT.rds" %in% list.files("output") == F) {
-  saveRDS(dataDT, "output/dataDT.rds")
-}
-
-# compare with statafull dataset, which already includes splines
+# compare with statafull dataset, which includes splines
 statafullDT <- as.data.table(readRDS("output/statafull.rds"))
 
 # adjust variable type
 logcols <- colnames(dataDT)[which(as.vector(dataDT[, lapply(.SD, class)]) == "logical")]
+
 statafullDT[, year := as.integer(format(year, format = "%Y"))
             ][, (logcols) := lapply(.SD, as.logical),
               .SDcols = logcols]
 rm(logcols)
 
-# check out rows and cols
-nrow(statafullDT) == nrow(dataDT) # not identical row numbers
-sum(names(dataDT) %in% names(statafullDT) == F) #all cols included but splines
-
-sum(unique(dataDT$dcode) %in% unique(statafullDT$dcode) == F) # all the same dcodes
-sum(unique(statafullDT$dcode) %in% unique(dataDT$dcode) == F)
-
-# check out min and max years per dcode: they're exactly the same
-yearsDT <- dataDT[, .(min_year_R = min(year),
-                      max_year_R = max(year)),
-                  by = dcode]
-yearsDT <- merge(yearsDT,
-                 statafullDT[, .(min_year_S = min(year),
-                                 max_year_S = max(year)),
-                             by = dcode],
-                 by = "dcode")
-yearsDT[, .(diff_min = sum(min_year_S != min_year_R),
-            diff_max = sum(max_year_S != max_year_R))]
-
-
 # Complete the stata data set, i.e. enter dyad-year combinations where all 
 # values are missing. Then check if nrow is the same.
+
 stata_completeDT <- statafullDT[CJ(dcode = dcode, year = year, unique = T),
                                 on = .(dcode, year)
-                                ][yearsDT[, c("dcode", 
-                                              "min_year_R", 
-                                              "max_year_R")], 
+                                ][min_max[, c("dcode", 
+                                              "min_year", 
+                                              "max_year")], 
                                   on = "dcode"
-                                ]
-rm(yearsDT)
-stata_completeDT <- stata_completeDT[year >= min_year_R & year <= max_year_R
-                                     ][,  `:=`(min_year_R = NULL,
-                                               max_year_R = NULL)]
+                                ][year >= min_year & year <= max_year
+                                ][,  `:=`(min_year = NULL,
+                                          max_year = NULL)
+                                ][order(dcode, year)]
+rm(min_max, statafullDT)
 
-# check that the filled values are exactly the difference
-setDT(dataDT)[!stata_completeDT, on = c("dcode", "year")]
-nrow(dataDT) - nrow(statafullDT) == nrow(setDT(dataDT)[!statafullDT, 
-                                                       on = c("dcode", "year")])
-# check that the rows are exactly the same
-stata_completeDT <- stata_completeDT[order(dcode, year)]
-dataDT <- dataDT[order(dcode, year)]
+# check that the data.tables are exactly the same, excluding btscs terms
+dataDT <- dataDT[order(dcode, year), -"py"]
 
-stata_compareDT <- stata_completeDT[, .SD, .SDcols = names(dataDT)]
 all.equal(dataDT, 
-          stata_compareDT,
+          stata_completeDT[, .SD, .SDcols = names(dataDT)],
           check.attributes = FALSE, 
           tolerance = 1e-6)
 
-# check out logcapr
-logcapr <- cbind(dataDT[, c("dcode", "year", "logcapr")],
-                 stata_completeDT[, c("dcode", "year", "logcapr")])
-names(logcapr) <-  paste0(rep(c("dcode", "year", "logcapr"),2), 
-                          rep(c("R", "S"), each = 3))
-logcapr[abs(logcaprR - logcaprS) > 1e-6] # only digits different
-rm(logcapr)
+# add final touches: dummy for years w/o war
+stata_completeDT[is.na(dem1) == FALSE & is.na(dem2) == FALSE & 
+                   is.na(majpow) == FALSE & is.na(logcapr) == FALSE &
+                   is.na(allianced) == FALSE & is.na(py) == FALSE,
+                 mmzmid1 := mean(mzmid1),
+                 by = year
+                 ][, dmmzmid1 := mmzmid1 == 0 | is.na(mmzmid1)]
 
-# check out mzmid1
-mzmid1 <- cbind(dataDT[, c("dcode", "year", "mzmid1", "mzmid")],
-                 stata_completeDT[, c("dcode", "year", "mzmid1", "mzmid")])
-names(mzmid1) <-  paste0(rep(c("dcode", "year", "mzmid1", "mzmid"),2), 
-                          rep(c("R", "S"), each = 4))
-mzmid1[, .(diff_na = sum(as.integer(is.na(mzmid1R) != is.na(mzmid1S))))]
-rm(mzmid1)
-
-# check out dbisanoctransij
-dbis <- cbind(dataDT[, c("dcode", "year", "dbisanoctransij")],
-              stata_completeDT[, c("dcode", "year", "dbisanoctransij")])
-names(dbis) <-  paste0(rep(c("dcode", "year", "dbisanoctransij"),2), 
-                         rep(c("R", "S"), each = 3))
-dbis[, `:=`(diff_na = as.integer(is.na(dbisanoctransijR) != is.na(dbisanoctransijS)),
-            diff = as.integer(dbisanoctransijR != dbisanoctransijS))]
+saveRDS(stata_completeDT, "output/full_data.rds")
+rm(dataDT, stata_completeDT, c1, c2, columns)
