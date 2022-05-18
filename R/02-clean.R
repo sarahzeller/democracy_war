@@ -46,39 +46,30 @@ columns <- c(
   "mzmid",
   "mzjoany"
 )
-dataDT[, (columns) := lapply(.SD,
-                             function(x)
-                               replace(x, which(x == -9), NA)),
-       .SDcols = columns]
-
-#generate unique dyad identifier
-dataDT[, dcode := ccode1 * 1000 + ccode2]
-
-#log of capability ratio
-dataDT[, logcapr := log(pmax(cap_1, cap_2) / pmin(cap_1, cap_2))
+dataDT[, (columns) := lapply(.SD, function(x) replace(x, which(x == -9), NA)),
+       .SDcols = columns
+        #generate unique dyad identifier
+       ][, dcode := ccode1 * 1000 + ccode2
+        #log of capability ratio
+       ][, logcapr := log(pmax(cap_1, cap_2) / pmin(cap_1, cap_2))
        ][is.infinite(logcapr), logcapr := NA
        ][, `:=`(cap_1 = NULL,
-                cap_2 = NULL)]
-
-#log distance
-dataDT[, logdist := log(distance)
-       ][, distance := NULL]
-
-#simplify contiguous variable
-dataDT[, dircont := contig < 6
-       ][, contig := NULL]
-
-#simplify major powers
-dataDT[, majpow := majpow1 == 1 | majpow2 == 1
+                cap_2 = NULL)
+        #log distance
+       ][, logdist := log(distance)
+       ][, distance := NULL
+        #simplify contiguous variable
+       ][, dircont := contig < 6
+       ][, contig := NULL
+        #simplify major powers
+       ][, majpow := majpow1 == 1 | majpow2 == 1
        ][, `:=`(majpow1 = NULL,
-              majpow2 = NULL)]
-
-#simplify alliance
-dataDT[, allianced := alliance != 4
-       ][, alliance := NULL]
-
-#change MIDs: dropping any ongoing or joiner MIDs
-dataDT[mzongo == 1 | mzjoany == 1, mzmid := NA
+              majpow2 = NULL)
+        #simplify alliance
+       ][, allianced := alliance != 4
+       ][, alliance := NULL
+        #change MIDs: dropping any ongoing or joiner MIDs
+       ][mzongo == 1 | mzjoany == 1, mzmid := NA
        ][, `:=`(mzjoany = NULL,
               mzongo = NULL)]
 
@@ -259,7 +250,15 @@ if ("dataDT.rds" %in% list.files("output") == F) {
 
 # compare with statafull dataset, which already includes splines
 statafullDT <- as.data.table(readRDS("output/statafull.rds"))
-statafullDT[, year := as.integer(format(year, format = "%Y"))]
+
+# adjust variable type
+logcols <- colnames(dataDT)[which(as.vector(dataDT[, lapply(.SD, class)]) == "logical")]
+statafullDT[, year := as.integer(format(year, format = "%Y"))
+            ][, (logcols) := lapply(.SD, as.logical),
+              .SDcols = logcols]
+rm(logcols)
+
+# check out rows and cols
 nrow(statafullDT) == nrow(dataDT) # not identical row numbers
 sum(names(dataDT) %in% names(statafullDT) == F) #all cols included but splines
 
@@ -278,7 +277,55 @@ yearsDT <- merge(yearsDT,
 yearsDT[, .(diff_min = sum(min_year_S != min_year_R),
             diff_max = sum(max_year_S != max_year_R))]
 
-rm(yearsDT)
 
-# TODO: complete the stata data set, i.e. also enter dyad-year combinations where
-# all values are missing. Then check if nrow is the same. in that case: merge.
+# Complete the stata data set, i.e. enter dyad-year combinations where all 
+# values are missing. Then check if nrow is the same.
+stata_completeDT <- statafullDT[CJ(dcode = dcode, year = year, unique = T),
+                                on = .(dcode, year)
+                                ][yearsDT[, c("dcode", 
+                                              "min_year_R", 
+                                              "max_year_R")], 
+                                  on = "dcode"
+                                ]
+rm(yearsDT)
+stata_completeDT <- stata_completeDT[year >= min_year_R & year <= max_year_R
+                                     ][,  `:=`(min_year_R = NULL,
+                                               max_year_R = NULL)]
+
+# check that the filled values are exactly the difference
+setDT(dataDT)[!stata_completeDT, on = c("dcode", "year")]
+nrow(dataDT) - nrow(statafullDT) == nrow(setDT(dataDT)[!statafullDT, 
+                                                       on = c("dcode", "year")])
+# check that the rows are exactly the same
+stata_completeDT <- stata_completeDT[order(dcode, year)]
+dataDT <- dataDT[order(dcode, year)]
+
+stata_compareDT <- stata_completeDT[, .SD, .SDcols = names(dataDT)]
+all.equal(dataDT, 
+          stata_compareDT,
+          check.attributes = FALSE, 
+          tolerance = 1e-6)
+
+# check out logcapr
+logcapr <- cbind(dataDT[, c("dcode", "year", "logcapr")],
+                 stata_completeDT[, c("dcode", "year", "logcapr")])
+names(logcapr) <-  paste0(rep(c("dcode", "year", "logcapr"),2), 
+                          rep(c("R", "S"), each = 3))
+logcapr[abs(logcaprR - logcaprS) > 1e-6] # only digits different
+rm(logcapr)
+
+# check out mzmid1
+mzmid1 <- cbind(dataDT[, c("dcode", "year", "mzmid1", "mzmid")],
+                 stata_completeDT[, c("dcode", "year", "mzmid1", "mzmid")])
+names(mzmid1) <-  paste0(rep(c("dcode", "year", "mzmid1", "mzmid"),2), 
+                          rep(c("R", "S"), each = 4))
+mzmid1[, .(diff_na = sum(as.integer(is.na(mzmid1R) != is.na(mzmid1S))))]
+rm(mzmid1)
+
+# check out dbisanoctransij
+dbis <- cbind(dataDT[, c("dcode", "year", "dbisanoctransij")],
+              stata_completeDT[, c("dcode", "year", "dbisanoctransij")])
+names(dbis) <-  paste0(rep(c("dcode", "year", "dbisanoctransij"),2), 
+                         rep(c("R", "S"), each = 3))
+dbis[, `:=`(diff_na = as.integer(is.na(dbisanoctransijR) != is.na(dbisanoctransijS)),
+            diff = as.integer(dbisanoctransijR != dbisanoctransijS))]
