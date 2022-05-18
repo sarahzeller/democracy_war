@@ -222,16 +222,14 @@ dataDT <- dataDT[year <= 2000]
 
 # add a variable for duration since last war
 # assume NAs are 0 for war spells: otherwise this function won't work
-dataDT[is.na(mzmid), mzmid := 0]
-dataDT[is.na(mzmid1), mzmid1 := 0]
-
-dataDT[, event_no := mzmid - mzmid1, by = dcode][
-  , event_no := cumsum(event_no), by = dcode
-]
-dataDT[, event_no := cumsum(event_no), by = dcode]
-dataDT[, py := 0:(.N-1), by = .(dcode, event_no)]
-dataDT[event_no == 0, py := 0]
-dataDT[, event_no := NULL]
+dataDT[, event_no := fifelse(is.na(mzmid) == TRUE, 0, mzmid) - 
+         ifelse(is.na(mzmid1) == TRUE, 0, mzmid1), 
+       by = dcode
+       ][, event_no := cumsum(ifelse(event_no < 0, 0, event_no)), by = dcode
+       ][, py := 0:(.N-1), by = .(dcode, event_no)
+       ][, event_no := NULL]
+# this is coded differently in stata, so I take that
+# dataDT[event_no == 0, py := 0]
 
 # also need to add NATURAL CUBIC SPLINES:
 # 3 terms with 3 equally-spaced-out knots
