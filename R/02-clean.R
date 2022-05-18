@@ -157,12 +157,22 @@ dataDT[, `:=`(
 
 # Mansfield and Snyder (2002) transition dummy:
 # transition from n1 to n2
-dataDT[, c(paste0("dbisanoctransc", 1:2), paste0("d7anoctransc", 1:2)) := .(
-  dbisc1n2 == 1 & shift(dbisc1n1, n = 5) == 1,
-  dbisc2n2 == 1 & shift(dbisc2n1, n = 5) == 1,
-  d7c1n2 == 1 & shift(d7c1n1, n = 5) == 1,
-  d7c2n2 == 1 & shift(d7c2n1, n = 5) == 1
-)]
+          # ensure NAs are excluded
+dataDT[, trans_na := is.na(dbisc1n2) | is.na(shift(dbisc1n1, n = 5)) |
+         is.na(dbisc1n2) | is.na(shift(dbisc2n1, n = 5)) |
+         is.na(d7c1n2) | is.na(shift(d7c1n1, n = 5)) |
+         is.na(d7c2n2) | is.na(shift(d7c2n1, n = 5)),
+       by = dcode
+       ][, c(paste0("dbisanoctransc", 1:2), paste0("d7anoctransc", 1:2)) := .(
+           dbisc1n2 == 1 & shift(dbisc1n1, n = 5) == 1,
+           dbisc2n2 == 1 & shift(dbisc2n1, n = 5) == 1,
+           d7c1n2 == 1   & shift(d7c1n1, n = 5) == 1,
+           d7c2n2 == 1   & shift(d7c2n1, n = 5) == 1),
+         by = dcode
+         # exclude NAs
+       ][trans_na == TRUE,
+         c(paste0("dbisanoctransc", 1:2), paste0("d7anoctransc", 1:2)) := NA
+       ][, trans_na := NULL]
 
 #at least one country in the dyad has a transition
 dataDT[, c("dbisanoctransij", "d7anoctransij") := .(
