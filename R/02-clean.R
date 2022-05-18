@@ -55,37 +55,38 @@ dataDT[, (columns) := lapply(.SD,
 dataDT[, dcode := ccode1 * 1000 + ccode2]
 
 #log of capability ratio
-dataDT[, logcapr := log(pmax(cap_1, cap_2) / pmin(cap_1, cap_2))]
-dataDT[, `:=`(cap_1 = NULL,
-              cap_2 = NULL)]
+dataDT[, logcapr := log(pmax(cap_1, cap_2) / pmin(cap_1, cap_2))
+       ][is.infinite(logcapr), logcapr := NA
+       ][, `:=`(cap_1 = NULL,
+                cap_2 = NULL)]
 
 #log distance
-dataDT[, logdist := log(distance)]
-dataDT[, distance := NULL]
+dataDT[, logdist := log(distance)
+       ][, distance := NULL]
 
 #simplify contiguous variable
-dataDT[, dircont := contig < 6]
-dataDT[, contig := NULL]
+dataDT[, dircont := contig < 6
+       ][, contig := NULL]
 
 #simplify major powers
-dataDT[, majpow := majpow1 == 1 | majpow2 == 1]
-dataDT[, `:=`(majpow1 = NULL,
+dataDT[, majpow := majpow1 == 1 | majpow2 == 1
+       ][, `:=`(majpow1 = NULL,
               majpow2 = NULL)]
 
 #simplify alliance
-dataDT[, allianced := alliance != 4]
-dataDT[, alliance := NULL]
+dataDT[, allianced := alliance != 4
+       ][, alliance := NULL]
 
 #change MIDs: dropping any ongoing or joiner MIDs
-dataDT[mzongo == 1 | mzjoany == 1, mzmid := NA]
-dataDT[, `:=`(mzjoany = NULL,
+dataDT[mzongo == 1 | mzjoany == 1, mzmid := NA
+       ][, `:=`(mzjoany = NULL,
               mzongo = NULL)]
 
 #lead mzmid
 #check first that there are no years missing
-dataDT[, miss := year != shift(year) + 1, by = .(ccode1, ccode2)]
-sum(dataDT$miss, na.rm = T)
-dataDT[, miss := NULL]
+sum(dataDT[, .(miss = year != shift(year) + 1), by = dcode]$miss, 
+    na.rm = TRUE)
+
 ##yup, definitely some missing
 # so add all year-dcode combinations
 # check min and max year of observation
@@ -103,9 +104,10 @@ rm(min_max)
 #take out all years & combinations which are never used
 #keep only those which are within the interval
 dataDT <- data_completeDT[year >= min_year &
-                            year <= max_year][,  `:=`(min_year = NULL,
-                                                       max_year = NULL)]
-dataDT[, mzmid1 := shift(mzmid), by = dcode]
+                            year <= max_year
+                          ][,  `:=`(min_year = NULL,
+                                    max_year = NULL)
+                          ][, mzmid1 := shift(mzmid), by = dcode]
 saveRDS(data_completeDT, "output/data_completeDT.rds")
 rm(data_completeDT)
 
