@@ -107,13 +107,15 @@ rm(min_max)
 #keep only those which are within the interval
 dataDT <- data_completeDT[year >= min_year & year <= max_year
                           ][, mzmid1 := shift(mzmid, type = "lead"), 
-saveRDS(data_completeDT, "output/data_completeDT.rds")
                             by = dcode
                           ][missing_year == 1,
                             mzmid1 := NA
                           ][, `:=`(min_year = NULL,
                                    max_year = NULL,
                                    missing_year = NULL)]
+if ("data_completeDT.rds" %in% list.files("output") == F) {
+  saveRDS(data_completeDT, "output/data_completeDT.rds")
+}
 rm(data_completeDT)
 
 #################################
@@ -241,8 +243,9 @@ dataDT[, event_no := fifelse(is.na(mzmid) == TRUE, 0, mzmid) -
 # also need to add NATURAL CUBIC SPLINES:
 # 3 terms with 3 equally-spaced-out knots
 # library(splines)
-
-saveRDS(dataDT, "output/dataDT.rds")
+if ("dataDT.rds" %in% list.files("output") == F) {
+  saveRDS(dataDT, "output/dataDT.rds")
+}
 
 # compare with statafull dataset, which already includes splines
 statafullDT <- as.data.table(readRDS("output/statafull.rds"))
