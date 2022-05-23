@@ -33,11 +33,21 @@ table_one <- stargazer(data = data,
 writeLines(table_one, "tables/table_one.tex")
 
 # create table for model1
-library(xtable)
-table1 <- xtable(coef(summary(model1))[1:8,])
-writeLines(table1, "tables/model1.tex")
+sum_model1 <- data.frame(variable = names(coef(model1)[1:8]),
+                         coefficient = coef(model1)[1:8],
+                         row.names = NULL)
+raw_tables <- list(model1 = sum_model1)
 
+# create folders, if not they do not exist yet
+paths <- c("tables/", "output/")
+ifelse(!dir.exists(paths), 
+       dir.create(path = paths),
+       paste0(paths, " already exists"))
+rm(paths)
 
-# TODO: get this to work so I can compile PDFs directly from R
-# library(tinytex)
-# pdflatex("tables/basic_document.tex")
+# save list to rds file
+saveRDS(raw_tables, file = "tables/raw_tables.RDS")
+
+# write PDF file
+knitr::knit2pdf("R/simple.Rnw", "tables/simple.tex")
+

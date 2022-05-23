@@ -1,0 +1,22 @@
+\documentclass{article}
+\begin{document}
+
+
+<<CreateTables, echo = FALSE, results = 'asis'>>=
+  library("xtable")
+
+# read in tables from rds file
+tables <- readRDS("../tables/raw_tables.RDS")
+
+# loop over named list
+for (name in names(tables)) {
+  # get current table
+  table <- tables[[name]]
+  # print current table to latex file
+  print(xtable(table, comment = FALSE, caption = name))
+}
+# print(xtable(summary(mtcars), comment = FALSE))
+@
+  
+  
+\end{document}
