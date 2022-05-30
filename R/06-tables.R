@@ -50,11 +50,11 @@ table_one <- stargazer(data = used_dataDT,
                        notes.append = TRUE,
                        notes.align = "l",
                        label = "tab:summary")
-# TODO: delete unnecessary backslashes
-# table_one <- table_one %>%
-#   str_replace("\_", "_") %>%
-#   str_replace("\\{", "{") %>%
-#   str_replace("\\}", "}")
+table_one <- table_one %>%
+  str_replace("Statistic", "Variable") %>%
+  str_replace("D\\\\_", "D_") %>%
+  str_replace("\\\\\\{", "{") %>%
+  str_replace("\\\\\\}", "}")
 
 writeLines(table_one, "tables/table_one.tex")
 
