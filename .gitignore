@@ -27,7 +27,8 @@ vignettes/*.pdf
 *.knit.md
 # R Environment Variables
 .Renviron
-# input data
+# input/output data
 input/
 output
 tables/
+graphics/
