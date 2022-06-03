@@ -12,8 +12,8 @@ options("RStata.StataVersion" = 14.2)
 library(extrafont)
 loadfonts(device = "win")
 Sys.setenv(R_GSCMD = "C:/Program Files/gs/gs9.55.0/bin/gswin64c.exe")
-ggsave_embed <- function(name){
-  ggsave(name)
+ggsave_embed <- function(name, width){
+  ggsave(name, width = width)
   embed_fonts(name)
 }
 
