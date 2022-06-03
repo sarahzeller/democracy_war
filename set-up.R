@@ -19,7 +19,7 @@ ggsave_embed <- function(name){
 
 custom_theme <- function(){
   theme_minimal()+
-    theme(text = element_text(family = "DM Sans"),
+    theme(text = element_text(family = "Open Sans"),
           plot.title = element_text(size = 18),
           plot.subtitle = element_text(size = 13, color = "grey30"),
           axis.text.y = element_text(size = 10, color = "grey10"),
