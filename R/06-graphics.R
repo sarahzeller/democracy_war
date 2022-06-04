@@ -59,11 +59,37 @@ dataDT[, .(Frequency = .N), by = regime_type
   xlab("") +
   # ggtitle("Distribution of regime type combinations") +
   custom_theme() + 
-  scale_fill_manual(name = "regime_type", values=c("blue4","grey50")) +
+  scale_fill_manual(name = "regime_type", 
+                    values=c("blue4",
+                             "grey50")) +
   scale_y_continuous(labels = not_scientific)
 ggsave_embed(name = "graphics/regime_type_bar_chart.pdf",
              width = 5,
              height = 2.5)
+
+
+# check out evolution over time
+dataDT[, is_lili := ifelse(regime_type == "LiLi",
+                           "LiLi",
+                           "Other")
+       ][, .(Frequency = .N), 
+         by = c("is_lili", "year")
+       ][, `:=`(year = as.integer(as.character(year)),
+                is_lili = factor(is_lili,
+                                 levels = c("Other",
+                                            "LiLi")))] %>%
+  ggplot(aes(x = year,
+             y = Frequency,
+             # col = regime_type,
+             fill = is_lili)) +
+  geom_area() + 
+  scale_fill_manual(values = c("grey80",
+                               "blue4")) +
+  custom_theme() + 
+  guides(fill = guide_legend(title = ""))
+
+ggsave_embed("graphics/regime_type_time.pdf",
+             width = 7)
 
 
 ###############################################
@@ -117,6 +143,18 @@ ggplot(aes(x = year, y = prop_alliance)) +
                                 2000))
 ggsave_embed(name = "graphics/alliances_number.pdf",
              width = 7)
+
+
+
+
+###############################################
+# Visualize MajPow
+##############################################
+maj <- dataDT[, .(n_maj = sum(majpow),
+                  n_dyads = length(unique(dcode))), 
+              by = year
+              ][, `:=`(year = as.integer(as.character(year)),
+                       rel_maj = n_maj/n_dyads)]
 
 
 ############
