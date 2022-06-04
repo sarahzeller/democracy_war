@@ -73,15 +73,24 @@ ggsave_embed(name = "graphics/regime_type_bar_chart.pdf",
 alliances <- dataDT[, .(sum_alliance = sum(allianced),
                         sum_dyads = length(unique(dcode))), by = year
                     ][, `:=`(prop_alliance = sum_alliance / sum_dyads * 100,
-                             year = as.integer(as.character(year)))] 
+                             year = as.integer(as.character(year)))
+                    ][order(year)] 
+
+# add NAs for years without conflict
+# years without conflicts
+no_conflict <- data.table(year = (1815:2000)[which(!1815:2000 %in% dataDT$year)])
+alliances <- merge(x = alliances,
+                   y = no_conflict,
+                   by = "year",
+                   all = TRUE)
 
 # find extreme years
-alliances[prop_alliance == min(prop_alliance) | 
-            prop_alliance == max(prop_alliance)]
+alliances[prop_alliance == min(prop_alliance, na.rm = TRUE) | 
+            prop_alliance == max(prop_alliance, na.rm = TRUE)]
 
 alliances %>%
 ggplot(aes(x = year, y = prop_alliance)) +
-  geom_line() +
+  geom_path() +
   custom_theme() +
   xlab("") + 
   ylab("Allied dyads (%)") +
