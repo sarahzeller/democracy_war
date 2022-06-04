@@ -4,15 +4,20 @@ model1 <- readRDS("output/model1.rds")
 used_dataDT <- model1$data
 
 fulldataDT <- as.data.table(readRDS("output/full_data.rds"))
-fulldataDT <- fulldataDT[, c("dcode", "year", "d7n22s")
-                         ][, `:=`(dcode = as.factor(dcode),
-                                  year = as.factor(year))]
+fulldataDT <- fulldataDT[, c("dcode",
+                             "year",
+                             "dem1",
+                             "dem2",
+                             "d7n22s")
+                         ][ , `:=`(dcode = as.factor(dcode),
+                                   year = as.factor(year))]
 
 used_dataDT <- merge(used_dataDT,
                      fulldataDT,
                      by = c("dcode", "year"),
                      all.x = TRUE)
 rm(fulldataDT)
+saveRDS(used_dataDT, "output/used_dataDT.rds")
 
 # eliminate variables which aren't interesting in Table 1
 used_dataDT <- used_dataDT[, c("mzmid1",
@@ -80,4 +85,3 @@ texreg::texreg(model1)
 
 # write PDF file
 knitr::knit2pdf("R/simple.Rnw", "tables/simple.tex")
-

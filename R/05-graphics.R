@@ -1,9 +1,5 @@
 source("set-up.R")
 dataDT<- readRDS("output/used_dataDT.rds")
-setnames(dataDT, 
-         old = "LogCapRatio",
-         new = "logcapr",
-         skip_absent = TRUE)
 library(tidyverse)
 library(scales)
 
