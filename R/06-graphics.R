@@ -36,30 +36,30 @@ ggsave_embed("graphics/both_hist.pdf",
 # bar chart with percentage of dyads
 #####################################
 # create categorical variable for each dyad regime type combination
-dataDT[`D_{DeDi}` == 1, regime_type := "1_dedi"
-       ][`D_{DiDi}` == 1, regime_type := "2_didi"
-       ][`D_{DeDe}` == 1, regime_type := "3_dede"
-       ][`D_{LiDi}` == 1, regime_type := "4_lidi"
-       ][`D_{DeLi}` == 1, regime_type := "5_deli"
-       ][`D_{LiLi}` == 1, regime_type := "6_lili"]
+dataDT[d7n31s == 1, regime_type := "DeDi"
+       ][d7n11s == 1, regime_type := "DiDi"
+       ][d7n33s == 1, regime_type := "DeDe"
+       ][d7n21s == 1, regime_type := "DiLi"
+       ][d7n32s == 1, regime_type := "DeLi"
+       ][d7n22s == 1, regime_type := "LiLi"]
 
-dataDT %>%
+# summarize first
+dataDT[, .(Frequency = .N), by = regime_type
+       # order by upside-down frequency
+       ][order(-Frequency)
+         # force this order
+       ][, regime_type := factor(regime_type,
+                                 levels = regime_type)] %>%
   ggplot(aes(x = regime_type,
-             fill = factor(regime_type != "6_lili"))) +
-  geom_bar(width = .4,
+             y = Frequency,
+             fill = factor(regime_type != "LiLi"))) +
+  geom_col(width = .4,
            show.legend = FALSE) +
   coord_flip() + 
   xlab("") +
-  ylab("Frequency") +
   # ggtitle("Distribution of regime type combinations") +
   custom_theme() + 
   scale_fill_manual(name = "regime_type", values=c("blue4","grey50")) +
-  scale_x_discrete(labels = c("DeDi",
-                              "DiDi",
-                              "DeDe",
-                              "LiDi",
-                              "DeLi",
-                              "LiLi")) + 
   scale_y_continuous(labels = not_scientific)
 ggsave_embed(name = "graphics/regime_type_bar_chart.pdf",
              width = 5,
