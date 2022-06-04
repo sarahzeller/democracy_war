@@ -64,3 +64,52 @@ dataDT %>%
 ggsave_embed(name = "graphics/regime_type_bar_chart.pdf",
              width = 5,
              height = 2.5)
+
+
+###############################################
+# show alliance in used data
+##############################################
+# find proportion of alliances
+alliances <- dataDT[, .(sum_alliance = sum(allianced),
+                        sum_dyads = length(unique(dcode))), by = year
+                    ][, `:=`(prop_alliance = sum_alliance / sum_dyads * 100,
+                             year = as.integer(as.character(year)))] 
+
+# find extreme years
+alliances[prop_alliance == min(prop_alliance) | 
+            prop_alliance == max(prop_alliance)]
+
+alliances %>%
+ggplot(aes(x = year, y = prop_alliance)) +
+  geom_line() +
+  custom_theme() +
+  xlab("") + 
+  ylab("Allied dyads (%)") +
+  annotate("rect",
+           xmin = c(1939, 1914, 1989, 1815),
+           xmax = c(1945, 1918, 1990, 1816),
+           ymin = 0,
+           ymax = 45,
+           alpha = .2) +
+  annotate("text",
+           x = c(1941, 1915, 1985, 1830),
+           y = 47,
+           label = c("WW II",
+                     "WW I",
+                     "End of Cold War",
+                     "Congress of Vienna"),
+           size = 3,
+           col = "grey30") +
+  scale_x_continuous(limits = c(1810, 2000), 
+                     breaks = c(1815, 
+                                1850, 
+                                1900,
+                                1950,
+                                2000))
+ggsave_embed(name = "graphics/alliances_number.pdf",
+             width = 7)
+
+
+############
+# TODO: show relationship b/w original data + used data
+# how many kicked out?
