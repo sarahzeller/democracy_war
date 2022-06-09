@@ -3,14 +3,12 @@ require(data.table)
 dataDT <- as.data.table(readRDS("output/full_data.rds"))
 
 
-# clogit baseline
-# TODO: find a close approximation
+# direct comparison with paper
 
 library(alpaca)
 model1 <- feglm(mzmid1 ~ d7n11s + d7n21s + d7n31s + d7n32s + d7n33s + 
-                  allianced + majpow + logcapr + py + `_spline1` + `_spline2` + 
-                  `_spline3` | dcode + year, 
-                data = dataDT[dmmzmid1 == 0],
+                  allianced + majpow + logcapr | dcode + year, 
+                data = dataDT,
                 binomial("logit"))
 summary(model1,
         type = "sandwich")
@@ -19,15 +17,12 @@ saveRDS(model1, "output/model1.rds")
 #############################################
 # only LiLi or not: Hypothesis 1
 ##########################################
-model_only_lili <- feglm(mzmid1 ~ d7n22s + 
-                  allianced + majpow + logcapr + py + `_spline1` + `_spline2` + 
-                  `_spline3` | dcode + year, 
-                data = dataDT[dmmzmid1 == 0],
+model_only_lili <- feglm(mzmid1 ~ d7n22s + allianced + majpow + logcapr| 
+                           dcode + year, 
+                data = dataDT,
                 binomial("logit"))
 summary(model_only_lili,
         type = "sandwich")
-saveRDS(model1, "output/model_only_lili.rds")
-
 # check Proportional Hazard (PH) along Metzger and Jones (2021):
 # interact covariates with splines, check if they're significant
 # TODO: find a method in which LR works for alpaca result
@@ -83,3 +78,4 @@ model_cox <- coxph(Surv(year, mzmid1) ~ d7n11s + d7n21s + d7n31s + d7n32s + d7n3
                      allianced + majpow + logcapr + py + `_spline1` + `_spline2` + 
                      `_spline3`,
                    data = dataDT[dmmzmid1 == 0])
+saveRDS(model1, "output/model_only_lili.rds")
