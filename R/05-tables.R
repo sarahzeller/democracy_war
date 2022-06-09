@@ -1,5 +1,6 @@
 # create summary table for data used in baseline
 model1 <- readRDS("output/model1.rds")
+model_only_lili <- readRDS("output/model_only_lili.rds")
 # need to merge d7n22 in as well so we have data on LiLi dyads
 used_dataDT <- model1$data
 
@@ -79,9 +80,22 @@ rm(paths)
 # save list to rds file
 saveRDS(raw_tables, file = "tables/raw_tables.RDS")
 
-# ALTERNATIVE
-# TODO extract only variables of interest
-texreg::texreg(model1)
-
 # write PDF file
 knitr::knit2pdf("R/simple.Rnw", "tables/simple.tex")
+
+# ALTERNATIVE, a lot prettier
+writeLines(texreg::texreg(model1,
+                          caption = "Baseline model: Binary choice with TWFE",
+                          caption.above = TRUE,
+                          label = "tab:baseline_alpaca"),
+           "tables/baseline.tex")
+table_lili <- texreg::texreg(model_only_lili,
+                         caption = "Binary choice model with TWFE",
+                         caption.above = TRUE,
+                         label = "tab:only_lili")
+table_lili <- table_lili %>%
+  str_replace("d7n22s", "D_{LiLi}") %>%
+  str_replace("alliancedTRUE", "Alliance") %>%
+  str_replace("majpowTRUE", "MajPow") %>%
+  str_replace("logcapr", "LogCapRatio")
+writeLines(table_lili, "tables/only_lili.tex")
