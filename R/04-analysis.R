@@ -12,9 +12,13 @@ model1 <- feglm(mzmid1 ~ d7n11s + d7n21s + d7n31s + d7n32s + d7n33s +
                   allianced + majpow + logcapr | dcode + year, 
                 data = dataDT,
                 binomial("logit"))
-summary(model1,
-        type = "sandwich")
-saveRDS(model1, "output/model1.rds")
+# bias correction
+model1_bc <- biasCorr(model1)
+summary(model1_bc)
+saveRDS(model1_bc, "output/model1_bc.rds")
+
+# pseudo R2
+1 - (model1_bc$deviance / model1_bc$null.deviance)
 
 #############################################
 # only LiLi or not: Hypothesis 1
@@ -23,9 +27,9 @@ model_only_lili <- feglm(mzmid1 ~ d7n22s + allianced + majpow + logcapr|
                            dcode + year, 
                 data = dataDT,
                 binomial("logit"))
-summary(model_only_lili,
-        type = "sandwich")
-saveRDS(model1, "output/model_only_lili.rds")
+model_only_lili_bc <- biasCorr(model_only_lili)
+summary(model_only_lili_bc)
+saveRDS(model_only_lili_bc, "output/model_only_lili_bc.rds")
 
 ##########################################
 # check out models' subset
