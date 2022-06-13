@@ -1,6 +1,10 @@
+#################################
+# SUMMARY TABLE
+###################################
+
 # create summary table for data used in baseline
-model1 <- readRDS("output/model1.rds")
-model_only_lili <- readRDS("output/model_only_lili.rds")
+model1 <- readRDS("output/model1_bc.rds")
+model_only_lili <- readRDS("output/model_only_lili_bc.rds")
 # need to merge d7n22 in as well so we have data on LiLi dyads
 used_dataDT <- model1$data
 
@@ -64,6 +68,10 @@ table_one <- table_one %>%
 
 writeLines(table_one, "tables/table_one.tex")
 
+######################################
+# direct comparison with paper
+#####################################
+
 # create table for model1
 sum_model1 <- data.frame(variable = names(coef(model1)[1:8]),
                          coefficient = coef(model1)[1:8],
@@ -84,18 +92,67 @@ saveRDS(raw_tables, file = "tables/raw_tables.RDS")
 knitr::knit2pdf("R/simple.Rnw", "tables/simple.tex")
 
 # ALTERNATIVE, a lot prettier
-writeLines(texreg::texreg(model1,
-                          caption = "Baseline model: Binary choice with TWFE",
-                          caption.above = TRUE,
-                          label = "tab:baseline_alpaca"),
+# alpaca-baseline model
+library(texreg)
+writeLines(texreg(model1,
+                  caption = "Baseline model: Binary choice with TWFE",
+                  caption.above = TRUE,
+                  label = "tab:baseline_alpaca"),
            "tables/baseline.tex")
-table_lili <- texreg::texreg(model_only_lili,
-                         caption = "Binary choice model with TWFE",
-                         caption.above = TRUE,
-                         label = "tab:only_lili")
+# original baseline model
+# TODO: actually incorporate this
+original <- read.csv2("input/baseline_model.csv",
+                      sep = ",")
+
+##########################
+# models with only lili
+###########################
+
+# load time-specific models
+before_wwi_bc <- readRDS("output/before_wwi_bc.rds")
+between_ww_bc <- readRDS("output/between_ww_bc.rds")
+cold_war_bc <- readRDS("output/cold_war_bc.rds")
+post_1985_bc <- readRDS("output/post_1985_bc.rds")
+
+# calculate pseudo R2
+# pseudo_r2 <- c(1-model_only_lili_bc$deviance / model_only_lili_bc$null.deviance,
+#                1-before_wwi_bc$deviance / before_wwi_bc$null.deviance,
+#                1-between_ww_bc$deviance / between_ww_bc$null.deviance,
+#                1-cold_war_bc$deviance / cold_war_bc$null.deviance,
+#                1-post_1985_bc$deviance / post_1985_bc$null.deviance)
+
+table_lili <- texreg(l = list(model_only_lili_bc,
+                              before_wwi_bc,
+                              between_ww_bc,
+                              cold_war_bc,
+                              post_1985_bc),
+                     caption = "Binary choice model with TWFE",
+                     caption.above = TRUE,
+                     label = "tab:only_lili",
+                     custom.model.names = paste0("(", 1:5, ")"),
+                     custom.gof.rows = list("Years" = c("1815--2000",
+                                                        "1815--1914",
+                                                        "1915--1945",
+                                                        "1946--2000",
+                                                         "1986--2000") #,
+                                            # "Pseudo $R^2$" = pseudo_r2
+                                            ),
+                     big.mark = " ",
+                     custom.note = "%stars. Coefficients with analytical bias correction \\citep{stammann2018}")
+
 table_lili <- table_lili %>%
-  str_replace("d7n22s", "D_{LiLi}") %>%
+  str_replace("d7n22s", "$D_{LiLi}$") %>%
   str_replace("alliancedTRUE", "Alliance") %>%
   str_replace("majpowTRUE", "MajPow") %>%
-  str_replace("logcapr", "LogCapRatio")
+  str_replace("logcapr", "LogCapRatio") %>%
+  # replace first one
+  str_replace("hline", "toprule \n \\\\midrule") %>%
+  # replace the middle ones
+  str_replace("hline", "midrule") %>%
+  str_replace("hline", "midrule") %>%
+  str_replace("hline", "midrule \n \\\\bottomrule") %>%
+  str_replace("Alliance", "\\\\midrule\n Alliance") %>%
+  str_replace("Num. groups: dcode", "Num. dyads") %>%
+  str_replace("Num. groups: year", "Num. years") 
+
 writeLines(table_lili, "tables/only_lili.tex")
