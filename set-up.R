@@ -1,5 +1,4 @@
 library(data.table)
-library(naniar)
 
 # set up stata-R interface
 library(RStata)
