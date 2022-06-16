@@ -1,9 +1,9 @@
 #################################
 # SUMMARY TABLE
 ###################################
-
+library(data.table)
 # create summary table for data used in baseline
-model1 <- readRDS("output/model1_bc.rds")
+model1_bc <- readRDS("output/model1_bc.rds")
 model_only_lili <- readRDS("output/model_only_lili_bc.rds")
 # need to merge d7n22 in as well so we have data on LiLi dyads
 used_dataDT <- model1$data
@@ -26,11 +26,11 @@ saveRDS(used_dataDT, "output/used_dataDT.rds")
 
 # eliminate variables which aren't interesting in Table 1
 used_dataDT <- used_dataDT[, c("mzmid1",
-                               "d7n11s",
-                               "d7n21s",
-                               "d7n31s",
-                               "d7n32s",
-                               "d7n33s",
+                               # "d7n11s",
+                               # "d7n21s",
+                               # "d7n31s",
+                               # "d7n32s",
+                               # "d7n33s",
                                "d7n22s",
                                "allianced",
                                "majpow",
@@ -38,11 +38,11 @@ used_dataDT <- used_dataDT[, c("mzmid1",
 
 
 names(used_dataDT) <- c("MID onset",
-                 "D_{DiDi}",
-                 "D_{LiDi}",
-                 "D_{DeDi}",
-                 "D_{DeLi}",
-                 "D_{DeDe}",
+                 # "D_{DiDi}",
+                 # "D_{LiDi}",
+                 # "D_{DeDi}",
+                 # "D_{DeLi}",
+                 # "D_{DeDe}",
                  "D_{LiLi}",
                  "Allianced",
                  "MajPow",
@@ -54,9 +54,8 @@ library(tidyverse)
 table_one <- stargazer(data = used_dataDT,
                        omit.summary.stat = "n",
                        title = "Sample description for the baseline model",
-                       notes = "\\parbox[t]{10cm}{Observations: 40,786. Summary measures for the 
-                       dependent variable (MID) and the explanatory variables with all
-                       observations included in the baseline regression.}",
+                       notes = "\\parbox[t]{10cm}{Summary measures for the
+                       variables with all included observations ($n$ = 40,786).}",
                        notes.append = TRUE,
                        notes.align = "l",
                        label = "tab:summary")
