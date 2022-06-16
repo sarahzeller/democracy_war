@@ -93,11 +93,23 @@ knitr::knit2pdf("R/simple.Rnw", "tables/simple.tex")
 # ALTERNATIVE, a lot prettier
 # alpaca-baseline model
 library(texreg)
-writeLines(texreg(model1,
-                  caption = "Baseline model: Binary choice with TWFE",
+baseline <- texreg(model1_bc,
+                  caption = "Baseline model: Logit with TWFE",
                   caption.above = TRUE,
-                  label = "tab:baseline_alpaca"),
-           "tables/baseline.tex")
+                  label = "tab:baseline_alpaca",
+                  custom.model.names = "Using alpaca")
+
+baseline <- baseline %>%
+  str_replace("d7n11s", "$D_{DiDi}$") %>%
+  str_replace("d7n21s", "$D_{LiDi}$") %>%
+  str_replace("d7n31s", "$D_{DeDi}$") %>%
+  str_replace("d7n32s", "$D_{DeLi}$") %>%
+  str_replace("d7n33s", "$D_{DeDe}$") %>%
+  str_replace("alliancedTRUE", "Allianced") %>%
+  str_replace("majpowTRUE", "MajPow") %>%
+  str_replace("logcapr", "LogCapRatio") 
+
+writeLines(baseline, "tables/baseline.tex")
 # original baseline model
 # TODO: actually incorporate this
 original <- read.csv2("input/baseline_model.csv",
