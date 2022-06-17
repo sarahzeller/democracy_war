@@ -3,8 +3,8 @@
 ###################################
 library(data.table)
 # create summary table for data used in baseline
-model1_bc <- readRDS("output/model1_bc.rds")
-model_only_lili <- readRDS("output/model_only_lili_bc.rds")
+model1 <- readRDS("output/model1_bc.rds")
+model_only_lili_bc <- readRDS("output/model_only_lili_bc.rds")
 # need to merge d7n22 in as well so we have data on LiLi dyads
 used_dataDT <- model1$data
 
@@ -53,7 +53,7 @@ library(tidyverse)
 
 table_one <- stargazer(data = used_dataDT,
                        omit.summary.stat = "n",
-                       title = "Sample description for the baseline model",
+                       title = "Sample description for the baseline model.",
                        notes = "\\parbox[t]{10cm}{Summary measures for the
                        variables with all included observations ($n$ = 40,786).}",
                        notes.append = TRUE,
@@ -97,7 +97,8 @@ baseline <- texreg(model1_bc,
                   caption = "Baseline model: Logit with TWFE",
                   caption.above = TRUE,
                   label = "tab:baseline_alpaca",
-                  custom.model.names = "Using alpaca")
+                  custom.model.names = "Using alpaca",
+                  stars = c(0.01, 0.05, 0.10, 0.15),)
 
 baseline <- baseline %>%
   str_replace("d7n11s", "$D_{DiDi}$") %>%
@@ -107,7 +108,8 @@ baseline <- baseline %>%
   str_replace("d7n33s", "$D_{DeDe}$") %>%
   str_replace("alliancedTRUE", "Allianced") %>%
   str_replace("majpowTRUE", "MajPow") %>%
-  str_replace("logcapr", "LogCapRatio") 
+  str_replace("logcapr", "LogCapRatio") %>%
+  str_replace("cdot", "dagger")
 
 writeLines(baseline, "tables/baseline.tex")
 # original baseline model
@@ -137,7 +139,7 @@ table_lili <- texreg(l = list(model_only_lili_bc,
                               between_ww_bc,
                               cold_war_bc,
                               post_1985_bc),
-                     caption = "Binary choice model with TWFE",
+                     caption = "Binary choice model with TWFE.",
                      caption.above = TRUE,
                      label = "tab:only_lili",
                      custom.model.names = paste0("(", 1:5, ")"),
@@ -148,8 +150,8 @@ table_lili <- texreg(l = list(model_only_lili_bc,
                                                          "1986--2000") #,
                                             # "Pseudo $R^2$" = pseudo_r2
                                             ),
-                     big.mark = " ",
-                     custom.note = "%stars. Coefficients with analytical bias correction \\citep{stammann2018}")
+                     stars = c(0.01, 0.05, 0.10, 0.15),
+                     custom.note = "%stars. Coefficients with analytical bias correction from texttt{alpaca}.")
 
 table_lili <- table_lili %>%
   str_replace("d7n22s", "$D_{LiLi}$") %>%
@@ -164,6 +166,9 @@ table_lili <- table_lili %>%
   str_replace("hline", "midrule \n \\\\bottomrule") %>%
   str_replace("Alliance", "\\\\midrule\n Alliance") %>%
   str_replace("Num. groups: dcode", "Num. dyads") %>%
-  str_replace("Num. groups: year", "Num. years") 
+  str_replace("Num. groups: year", "Num. years") %>%
+  str_replace("texttt", "\\\\texttt") %>%
+  str_replace("\\{cdot", "{\\\\cdot") %>%
+  str_replace_all("cdot", "dagger")
 
 writeLines(table_lili, "tables/only_lili.tex")
