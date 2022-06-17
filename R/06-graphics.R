@@ -3,10 +3,11 @@ dataDT<- readRDS("output/used_dataDT.rds")
 library(tidyverse)
 library(scales)
 
-# show CapRatio and LogCapRatio
 
 not_scientific <- format_format(big.mark = " ",
                                 scientific = FALSE)
+
+# show CapRatio and LogCapRatio
 
 hist_lcapr <- dataDT %>%
 ggplot(aes(logcapr)) +
@@ -43,6 +44,26 @@ dataDT[d7n31s == 1, regime_type := "DeDi"
        ][d7n32s == 1, regime_type := "DeLi"
        ][d7n22s == 1, regime_type := "LiLi"]
 
+# add categorical variable for other LiLi-definition
+full_data <- readRDS("output/full_data.rds")
+full_data[dbisn31s == 1, regime_type_other := "DeDi"
+          ][dbisn11s == 1, regime_type_other := "DiDi"
+          ][dbisn33s == 1, regime_type_other := "DeDe"
+          ][dbisn21s == 1, regime_type_other := "DiLi"
+          ][dbisn32s == 1, regime_type_other := "DeLi"
+          ][dbisn22s == 1, regime_type_other := "LiLi"
+          ][, `:=`(dcode = as.factor(dcode),
+                   year = as.factor(year))]
+
+other_lili <- full_data[, c("dcode",
+                            "year",
+                            "regime_type_other")]
+rm(full_data)
+dataDT <- merge(dataDT,
+                other_lili,
+                on = c("dcode", "year"),
+                all.x = TRUE)
+rm(other_lili)
 # summarize first
 dataDT[, .(Frequency = .N), by = regime_type
        # order by upside-down frequency
@@ -72,11 +93,14 @@ ggsave_embed(name = "graphics/regime_type_bar_chart.pdf",
 dataDT[, is_lili := ifelse(regime_type == "LiLi",
                            "LiLi",
                            "Other")
-       ][, .(Frequency = .N), 
+       ][regime_type_other == "LiLi" & is_lili == "Other",
+         is_lili := "LiLi (additional \nscore points)"]
+dataDT[, .(Frequency = .N), 
          by = c("is_lili", "year")
        ][, `:=`(year = as.integer(as.character(year)),
                 is_lili = factor(is_lili,
                                  levels = c("Other",
+                                            "LiLi (additional \nscore points)",
                                             "LiLi")))] %>%
   ggplot(aes(x = year,
              y = Frequency,
@@ -84,12 +108,28 @@ dataDT[, is_lili := ifelse(regime_type == "LiLi",
              fill = is_lili)) +
   geom_area() + 
   scale_fill_manual(values = c("grey80",
+                               "cornflowerblue",
                                "blue4")) +
   custom_theme() + 
+  xlab("") +
   guides(fill = guide_legend(title = ""))
 
 ggsave_embed("graphics/regime_type_time.pdf",
-             width = 7)
+             width = 7,
+             height = 3)
+
+# check out how many LiLi-dyads >1945
+dataDT[, year := as.integer(as.character(year))
+      ][, time := ifelse(year > 1985, "4_Post Cold War",
+                        ifelse(year > 1945, "3_Post World War II",
+                               ifelse(year >1914 & year < 1946, "2_Between Wars",
+                                      ifelse(year<1915, "1_Before World War I", ""))))]
+dataDT[, .(number_dyads = length(unique(dcode))), by = c("time",
+                                                         "is_lili")
+       ][order(time)]
+# and overall
+dataDT[, .(number_dyads = length(unique(dcode))), by = is_lili]
+
 
 
 ###############################################
