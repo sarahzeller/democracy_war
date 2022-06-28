@@ -63,7 +63,7 @@ table_one <- table_one %>%
   str_replace("Statistic", "Variable") %>%
   str_replace("D\\\\_", "D_") %>%
   str_replace("\\\\\\{", "{") %>%
-  str_replace("\\\\\\}", "}")
+  str_replace("\\\\\\}", "}") 
 
 writeLines(table_one, "tables/table_one.tex")
 
@@ -93,12 +93,15 @@ knitr::knit2pdf("R/simple.Rnw", "tables/simple.tex")
 # ALTERNATIVE, a lot prettier
 # alpaca-baseline model
 library(texreg)
-baseline <- texreg(model1_bc,
+baseline <- texreg(model1,
                   caption = "Baseline model: Logit with TWFE",
                   caption.above = TRUE,
                   label = "tab:baseline_alpaca",
                   custom.model.names = "Using alpaca",
-                  stars = c(0.01, 0.05, 0.10, 0.15),)
+                  stars = c(0.01, 0.05, 0.10, 0.15),
+                  custom.note = "%stars. The dummies ($D$) refer to the dyads' 
+                  regime-type combination. Observations are in 1816--2000. 
+                  Values in parentheses refer to standard errors.")
 
 baseline <- baseline %>%
   str_replace("d7n11s", "$D_{DiDi}$") %>%
@@ -156,7 +159,8 @@ table_lili <- texreg(l = list(model_only_lili_bc,
                                             # "Pseudo $R^2$" = pseudo_r2
                                             ),
                      stars = c(0.01, 0.05, 0.10, 0.15),
-                     custom.note = "%stars. Coefficients with analytical bias correction from texttt{alpaca}.")
+                     custom.note = "%stars. Coefficients with analytical bias correction from texttt{alpaca}.
+                     Values in parentheses\\ refer to standard errors. Unit of observation: dyads.")
 
 table_lili <- table_lili %>%
   str_replace("d7n22s", "$D_{LiLi}$") %>%
@@ -169,11 +173,13 @@ table_lili <- table_lili %>%
   str_replace("hline", "midrule") %>%
   str_replace("hline", "midrule") %>%
   str_replace("hline", "midrule \n \\\\bottomrule") %>%
-  str_replace("Alliance", "\\\\midrule\n Alliance") %>%
+  str_replace("Alliance", "[3ex]\n Alliance") %>%
   str_replace("Num. groups: dcode", "Num. dyads") %>%
   str_replace("Num. groups: year", "Num. years") %>%
   str_replace("texttt", "\\\\texttt") %>%
   str_replace("\\{cdot", "{\\\\cdot") %>%
-  str_replace_all("cdot", "dagger")
+  str_replace_all("cdot", "dagger") %>%
+  str_replace("Deviance", "% Deviance") %>%
+  str_replace("Num. years", "% Num. years")
 
 writeLines(table_lili, "tables/only_lili.tex")
