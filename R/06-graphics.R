@@ -183,6 +183,8 @@ ggplot(aes(x = year, y = prop_alliance)) +
                                 2000))
 ggsave_embed(name = "graphics/alliances_number.pdf",
              width = 7)
+ggsave_embed(name = "graphics/alliances_number_presentation.pdf",
+             width = 11)
 
 
 
